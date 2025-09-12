@@ -1,0 +1,77 @@
+services:
+  inference:
+    build: .
+    container_name: inference
+    command: [ "python", "inference.py" ]
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  exporter:
+    build: .
+    container_name: exporter
+    command: [ "python", "prometheus_exporter.py" ]
+    environment:
+      - API_URL=http://inference:8000/predict
+      - HTTP_METHOD=POST
+      - INTERVAL_SEC=2
+      - TIMEOUT_SEC=5
+      - EXPORTER_PORT=8001
+      - PAYLOAD_JSON='{"X":[[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.1,0.2,0.3,0.4]]}'
+      - ACC=0.86
+      - PREC=0.83
+      - RECALL=0.81
+      - F1=0.82
+      - TP=100
+      - TN=90
+      - FP=8
+      - FN=12
+    ports:
+      - "8001:8001"
+    depends_on:
+      - inference
+      - prometheus
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command: [ "--config.file=/etc/prometheus/prometheus.yml" ]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    command: [ "--config.file=/etc/alertmanager/alertmanager.yml" ]
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # SMTP
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.gmail.com:587
+      - GF_SMTP_USER=<YOUR_EMAIL>@gmail.com
+      - GF_SMTP_PASSWORD=<YOUR_APP_PASSWORD>
+      - GF_SMTP_FROM_ADDRESS=<YOUR_EMAIL>@gmail.com
+      - GF_SMTP_FROM_NAME=Grafana
+      - GF_SMTP_SKIP_VERIFY=true
+    depends_on:
+      - prometheus
+    restart: unless-stopped

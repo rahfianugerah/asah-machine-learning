@@ -1,0 +1,265 @@
+{
+  "title": "ML Inference Monitoring",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Requests /s",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "rate(inference_requests_total[1m])"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Success Rate %",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "(rate(inference_success_total[1m]) / clamp_min(rate(inference_requests_total[1m]), 1e-9)) * 100"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate %",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "(rate(inference_error_total[1m]) / clamp_min(rate(inference_requests_total[1m]), 1e-9)) * 100"
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "p95 Latency (s)",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum(rate(inference_latency_seconds_bucket[5m])) by (le))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "In-flight Requests",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "inference_in_progress"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency buckets",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(inference_latency_seconds_bucket[5m])) by (le)"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Avg Batch Size",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(inference_input_batch_sum[5m]))/sum(rate(inference_input_batch_count[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Avg Payload Bytes",
+      "gridPos": {
+        "x": 6,
+        "y": 12,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "rate(inference_payload_bytes_sum[5m]) / rate(inference_payload_bytes_count[5m])"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Accuracy",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_accuracy"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Precision",
+      "gridPos": {
+        "x": 15,
+        "y": 12,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_precision"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Recall",
+      "gridPos": {
+        "x": 18,
+        "y": 12,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_recall"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "F1",
+      "gridPos": {
+        "x": 21,
+        "y": 12,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_f1"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "TP/TN/FP/FN",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_confusion_tp",
+          "legendFormat": "TP"
+        },
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_confusion_tn",
+          "legendFormat": "TN"
+        },
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_confusion_fp",
+          "legendFormat": "FP"
+        },
+        {
+          "datasource": {
+            "uid": "prometheus"
+          },
+          "expr": "model_confusion_fn",
+          "legendFormat": "FN"
+        }
+      ]
+    }
+  ]
+}

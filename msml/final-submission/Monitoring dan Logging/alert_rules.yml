@@ -1,0 +1,26 @@
+groups:
+- name: ml_alerts
+  rules:
+  - alert: InferenceHighErrorRate
+    expr: (rate(inference_error_total[5m]) / clamp_min(rate(inference_requests_total[5m]), 1e-9)) * 100 > 5
+    for: 3m
+    labels: { severity: "warning" }
+    annotations:
+      summary: "High Error Rates"
+      description: "Error rate > 5% selama 5 menit"
+
+  - alert: InferenceHighLatency
+    expr: histogram_quantile(0.95, sum(rate(inference_latency_seconds_bucket[5m])) by (le)) > 0.5
+    for: 3m
+    labels: { severity: "critical" }
+    annotations:
+      summary: "High Latency p95"
+      description: "p95 latency > 0.5s"
+
+  - alert: ModelAccuracyLow
+    expr: model_accuracy < 0.80
+    for: 10m
+    labels: { severity: "warning" }
+    annotations:
+      summary: "Low Accuracy"
+      description: "model_accuracy < 0.80"

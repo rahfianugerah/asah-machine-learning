@@ -1,0 +1,19 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: '<YOUR_EMAIL>@gmail.com'
+  smtp_require_tls: true
+  smtp_auth_username: '<YOUR_EMAIL>@gmail.com'
+  smtp_auth_password: '<YOUR_APP_PASSWORD>'
+
+route:
+  receiver: 'email-default'
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 2h
+
+receivers:
+  - name: 'email-default'
+    email_configs:
+      - to: '<YOUR_EMAIL>@gmail.com'
+        send_resolved: true
