@@ -1,0 +1,9 @@
+name: mlp-scikit
+env_manager: local
+
+entry_points:
+  train:
+    parameters:
+      experiment_name: {type: str, default: "mlp_train_ci"}
+    command: >
+      python modelling.py

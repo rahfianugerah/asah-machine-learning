@@ -1,0 +1,100 @@
+name: Automate CI/CD MLflow - MLProject
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+env:
+  EXP_NAME: mlp_train_ci
+  # Change to your Docker Hub 'username/repository'
+  IMAGE_BASE: nrahfi/sistem-machine-learning
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Use GITHUB_TOKEN for 'git push'
+          persist-credentials: true
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.7'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mlflow scikit-learn numpy pandas matplotlib joblib
+
+      - name: Run MLflow Project
+        run: |
+          mlflow run MLProject --env-manager=local -e train -P experiment_name="${EXP_NAME}"
+
+      # Read modelling.py
+      - name: Get MLflow 'run_id'
+        run: |
+          if [ ! -f MLProject/artifacts/run_id.txt ]; then
+            echo "run_id.txt not found"; exit 1
+          fi
+          RUN_ID=$(cat MLProject/artifacts/run_id.txt | tr -d '\n')
+          echo "RUN_ID=$RUN_ID" | tee -a "$GITHUB_ENV"
+
+      - name: Upload Evaluation Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model-artifacts
+          path: |
+            MLProject/artifacts/confusion_matrix_test.png
+            MLProject/artifacts/confusion_matrix_test.csv
+            MLProject/artifacts/roc_curve_test.png
+            MLProject/artifacts/classification_report.txt
+            MLProject/artifacts/metrics.json
+            MLProject/artifacts/MLP_model/**
+
+      # Commit artifacts into the repo
+      - name: Commit Artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add MLProject/artifacts/*
+          git commit -m "[AUTO-SKIP-CI] Add Model Artifacts" || echo "No Changes to Commit"
+          git push
+
+      - name: Build Docker Image
+        env:
+          MLFLOW_TRACKING_URI: file:MLProject/mlruns
+        run: |
+          mlflow models build-docker --model-uri "runs:/$RUN_ID/model" --name "${IMAGE_BASE}:${{ github.run_number }}"
+          docker tag "${IMAGE_BASE}:${{ github.run_number }}" "${IMAGE_BASE}:latest"
+
+      # Docker Hub login & push
+      - name: Check Docker Hub Secrets
+        run: |
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then echo "DOCKER_USERNAME missing"; exit 1; fi
+          if [ -z "${{ secrets.DOCKER_TOKEN }}" ]; then echo "DOCKER_TOKEN missing"; exit 1; fi
+          echo "Secrets Present."
+
+      - name: Login Docker Hub
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Push Docker Image
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          echo "Pushing ${IMAGE_BASE}:${{ github.run_number }} and :latest"
+          docker push "${IMAGE_BASE}:${{ github.run_number }}"
+          docker push "${IMAGE_BASE}:latest"
