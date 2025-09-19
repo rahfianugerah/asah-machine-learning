@@ -37,7 +37,7 @@
 I would like to express my gratitude to the following individuals and organizations for their support and contributions:
 
 - **Asah Program** – for providing the platform to learn, grow, and apply my cloud computing skills.
-- **My Mentor and Instructors** – for their guidance and expertise throughout my cloud computing journey.
+- **Mentors and Instructors** – for their guidance and expertise throughout my cloud computing journey.
 - **Collaborators and Peers** – for their invaluable feedback, collaboration, and support on various projects.
 
 Your contributions and support were instrumental in completing this body of work!
