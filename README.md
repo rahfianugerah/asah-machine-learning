@@ -25,11 +25,11 @@
 
 <div align=center>
   
-| Courses | Links |
+| Courses | My Submissions |
 |---|---|
-| Learn Machine Learning for Beginners | [Click here!]() |
-| Learn the Fundamental of Deep Learning | [Click here!]() |
-| Building a Machine Learning System | [Click here!]() |
+| Learn Machine Learning for Beginners | [Click here!](https://github.com/rahfianugerah/asah-machine-learning/tree/main/bmlp) |
+| Learn the Fundamental of Deep Learning | [Click here!](https://github.com/rahfianugerah/asah-machine-learning/tree/main/bfdl) |
+| Building a Machine Learning System | [Click here!](https://github.com/rahfianugerah/asah-machine-learning/tree/main/msml) |
 
 </div>
 
